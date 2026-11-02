@@ -1,0 +1,531 @@
+{
+  "source": "Fiche avancée – Réseaux de neurones convolutifs (CNN), 10 pages",
+  "language": "fr",
+  "lesson_count": 14,
+  "lessons": [
+    {
+      "id": 1,
+      "title": "Pourquoi les CNN ?",
+      "concept": "Une image possède une structure spatiale : la position relative des pixels a du sens. Un CNN exploite cette structure grâce à des filtres locaux partagés, contrairement à un MLP qui perd une partie de cette géométrie lorsqu’il aplatit l’image.",
+      "formula": "3 idées : connectivité locale • partage des poids • hiérarchie de représentation",
+      "vocabulary": [
+        [
+          "Connectivité locale",
+          "Chaque neurone observe un petit voisinage de l’entrée."
+        ],
+        [
+          "Partage des poids",
+          "Le même filtre est réutilisé à toutes les positions."
+        ],
+        [
+          "Hiérarchie",
+          "Les couches profondes combinent des motifs simples en motifs plus abstraits."
+        ]
+      ],
+      "question": "Pourquoi un CNN est-il souvent mieux adapté qu’un MLP à une image ?",
+      "options": [
+        "Il conserve les relations spatiales locales et réutilise les filtres",
+        "Il transforme toujours l’image en texte",
+        "Il n’utilise aucun paramètre appris"
+      ],
+      "correct": 0,
+      "why": "L’image est une grille où les voisinages comptent. Le CNN exploite cette géométrie avec des connexions locales et des poids partagés, alors qu’un MLP reçoit généralement une version aplatie.",
+      "scene": "Une image en grille se transforme en cartes de caractéristiques ; un filtre local se déplace et réutilise les mêmes poids.",
+      "objects": [
+        "image",
+        "filter",
+        "feature"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "La convolution",
+      "concept": "Un petit noyau glisse sur l’image et calcule un score à chaque position. Le score est élevé lorsque la zone observée ressemble au motif encodé par le noyau.",
+      "formula": "Yᵢ,ⱼ = Σₐ Σᵦ Xᵢ₊ₐ,ⱼ₊ᵦ Kₐ,ᵦ + b  (stride 1, sans padding)",
+      "vocabulary": [
+        [
+          "Noyau / filtre",
+          "Petite matrice de coefficients qui recherche un motif."
+        ],
+        [
+          "Stride",
+          "Pas de déplacement du noyau."
+        ],
+        [
+          "Biais",
+          "Valeur ajoutée au score calculé."
+        ],
+        [
+          "Carte d’activation",
+          "Grille des scores produits par le filtre."
+        ]
+      ],
+      "question": "Que calcule le filtre à chaque position ?",
+      "options": [
+        "Une somme pondérée entre la fenêtre et ses coefficients",
+        "La moyenne de toute l’image",
+        "Une nouvelle image RGB"
+      ],
+      "correct": 0,
+      "why": "On multiplie les valeurs de la fenêtre par les coefficients correspondants, puis on additionne les produits et le biais. Le noyau se déplace ensuite vers la position suivante.",
+      "scene": "Un noyau 3×3 survole une grille 8×8 ; la fenêtre active s’illumine et le score apparaît dans une carte de sortie.",
+      "objects": [
+        "grid",
+        "kernel",
+        "score"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Pourquoi un filtre détecte un motif",
+      "concept": "Un filtre agit comme un gabarit : ses coefficients favorisent certaines positions et en pénalisent d’autres. Son score devient élevé lorsque la région locale ressemble à ce gabarit.",
+      "formula": "K = [[0,1,0],[0,1,0],[0,1,0]]  → détecteur de ligne verticale claire",
+      "vocabulary": [
+        [
+          "Gabarit",
+          "Motif de référence représenté par les poids du filtre."
+        ],
+        [
+          "Produit terme à terme",
+          "Multiplication des valeurs de la fenêtre par les poids."
+        ],
+        [
+          "Score",
+          "Somme pondérée indiquant la ressemblance locale."
+        ],
+        [
+          "Activation",
+          "Intensité de réponse du filtre à un endroit."
+        ]
+      ],
+      "question": "Avec le filtre vertical [0 1 0] répété sur trois lignes, quelle fenêtre donne une forte réponse ?",
+      "options": [
+        "Une colonne centrale composée de 1",
+        "Une fenêtre entièrement nulle",
+        "Une ligne horizontale de 1"
+      ],
+      "correct": 0,
+      "why": "Les coefficients non nuls sont dans la colonne centrale. Si cette colonne contient trois 1, la somme des produits vaut 3 ; une fenêtre uniforme ou horizontale répond moins fortement.",
+      "scene": "Deux fenêtres 3×3 alternent sous un filtre vertical ; une jauge compare leurs scores.",
+      "objects": [
+        "kernel",
+        "windowA",
+        "windowB"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Dimensions de sortie",
+      "concept": "La taille spatiale de sortie dépend de la taille de l’entrée, du filtre, du padding et du stride. En 2D, le calcul est effectué séparément pour la hauteur et la largeur.",
+      "formula": "O = ⌊(I − F + 2P) / S⌋ + 1",
+      "vocabulary": [
+        [
+          "I",
+          "Taille d’une dimension de l’entrée."
+        ],
+        [
+          "F",
+          "Taille du filtre sur cette dimension."
+        ],
+        [
+          "P",
+          "Padding ajouté autour de l’entrée."
+        ],
+        [
+          "O",
+          "Taille de la dimension de sortie."
+        ]
+      ],
+      "question": "Entrée 8×8, filtre 3×3, padding 0 et stride 1 : quelle sortie ?",
+      "options": [
+        "6×6",
+        "8×8",
+        "3×3"
+      ],
+      "correct": 0,
+      "why": "O = floor((8 − 3 + 0) / 1) + 1 = 6. Le filtre ne peut être placé que sur six positions par dimension sans dépasser les bords.",
+      "scene": "Une grille 8×8 et une fenêtre 3×3 montrent les positions valides ; un compteur calcule les dimensions de sortie.",
+      "objects": [
+        "inputGrid",
+        "window",
+        "outputGrid"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Stride et padding",
+      "concept": "Le stride détermine le pas du déplacement du noyau : un pas plus grand réduit la taille de sortie. Le padding ajoute une bordure, souvent nulle, pour contrôler le traitement des bords.",
+      "formula": "Valid : P=0  •  Same : taille approximativement conservée  •  Full : padding plus large",
+      "vocabulary": [
+        [
+          "Stride 1",
+          "Balayage fin, position après position."
+        ],
+        [
+          "Stride 2",
+          "Le noyau saute une position sur deux."
+        ],
+        [
+          "Valid",
+          "Aucun padding n’est ajouté."
+        ],
+        [
+          "Same",
+          "Padding choisi pour conserver approximativement la taille."
+        ]
+      ],
+      "question": "Que se passe-t-il généralement quand on augmente le stride ?",
+      "options": [
+        "La sortie devient plus petite et le calcul diminue",
+        "La sortie devient toujours plus grande",
+        "Le filtre apprend plus de poids"
+      ],
+      "correct": 0,
+      "why": "Le noyau est déplacé par plus grands pas : il visite moins de positions. Cela réduit le coût et la taille des cartes d’activation, au prix d’une précision spatiale moindre.",
+      "scene": "Contrôle de stride 1/2 et comparaison de bordures Valid/Same/Full autour d’une grille.",
+      "objects": [
+        "stride",
+        "padding",
+        "output"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Profondeur et nombre de filtres",
+      "concept": "Un filtre couvre toute la profondeur de l’entrée, y compris tous ses canaux. Chaque filtre produit une carte d’activation ; K filtres donnent donc K cartes en sortie.",
+      "formula": "Volume de sortie : Hout × Wout × K\nParamètres : K(F × F × C + 1)",
+      "vocabulary": [
+        [
+          "Canal",
+          "Plan de valeurs, par exemple R, G ou B."
+        ],
+        [
+          "Profondeur C",
+          "Nombre de canaux de l’entrée."
+        ],
+        [
+          "Nombre de filtres K",
+          "Nombre de cartes d’activation produites."
+        ],
+        [
+          "Paramètres",
+          "Poids et biais appris par la couche."
+        ]
+      ],
+      "question": "Une couche applique K filtres distincts. Quelle est la profondeur de sortie ?",
+      "options": [
+        "K",
+        "C uniquement",
+        "F×F"
+      ],
+      "correct": 0,
+      "why": "Chaque filtre produit une carte. En empilant les K cartes, la profondeur du volume de sortie devient K, tandis que chaque filtre couvre les C canaux de l’entrée.",
+      "scene": "Trois canaux RGB alimentent plusieurs filtres 3D ; les cartes résultantes s’empilent en volume.",
+      "objects": [
+        "channels",
+        "filters",
+        "volume"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Activation non linéaire",
+      "concept": "Après la convolution, une fonction d’activation est souvent appliquée. ReLU annule les valeurs négatives et conserve les positives, introduisant une non-linéarité dans le réseau.",
+      "formula": "ReLU(x) = max(0, x)",
+      "vocabulary": [
+        [
+          "Activation",
+          "Fonction appliquée aux sorties d’une couche."
+        ],
+        [
+          "ReLU",
+          "Fonction qui remplace les valeurs négatives par zéro."
+        ],
+        [
+          "Non-linéarité",
+          "Propriété permettant de modéliser des relations complexes."
+        ]
+      ],
+      "question": "Quelle est la valeur de ReLU(−2) ?",
+      "options": [
+        "0",
+        "−2",
+        "2"
+      ],
+      "correct": 0,
+      "why": "ReLU(x)=max(0,x). Pour x=−2, le maximum entre 0 et −2 est 0. Pour une valeur positive, ReLU la conserve.",
+      "scene": "Une rangée de valeurs positives et négatives traverse une rampe ReLU ; les négatives tombent à zéro.",
+      "objects": [
+        "values",
+        "reluCurve",
+        "activations"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Pooling",
+      "concept": "Le pooling réduit les dimensions spatiales sans apprendre de nouveaux poids. Max pooling conserve la plus grande valeur d’une fenêtre, tandis qu’average pooling en calcule la moyenne.",
+      "formula": "Max : max(x₁,…,xₙ)  •  Average : (x₁+…+xₙ)/n",
+      "vocabulary": [
+        [
+          "Pooling",
+          "Opération de réduction spatiale."
+        ],
+        [
+          "Max pooling",
+          "Conserve la valeur maximale de la fenêtre."
+        ],
+        [
+          "Average pooling",
+          "Remplace la fenêtre par sa moyenne."
+        ],
+        [
+          "Perte d’information",
+          "Certains détails disparaissent lors de la réduction."
+        ]
+      ],
+      "question": "Pour la fenêtre [1, 3, 2, 4], quelles sorties donnent max pooling et average pooling ?",
+      "options": [
+        "4 et 2,5",
+        "2,5 et 4",
+        "1 et 4"
+      ],
+      "correct": 0,
+      "why": "Le maximum est 4. La moyenne vaut (1+3+2+4)/4 = 2,5. Le pooling réduit l’information ; trop tôt, il peut faire perdre des détails utiles.",
+      "scene": "Une grille 4×4 se compacte en cellules 2×2, avec bascule entre max et moyenne.",
+      "objects": [
+        "poolInput",
+        "maxPool",
+        "avgPool"
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Ce qu’apprennent les couches",
+      "concept": "Les premières couches détectent des caractéristiques simples comme les bords et les lignes. Les couches intermédiaires et profondes combinent ces éléments en textures, motifs, parties d’objets et formes plus sémantiques.",
+      "formula": "Bords / lignes → textures / coins → parties d’objets / formes",
+      "vocabulary": [
+        [
+          "Caractéristique",
+          "Motif utile extrait de l’image."
+        ],
+        [
+          "Couche précoce",
+          "Couche qui détecte souvent des éléments simples."
+        ],
+        [
+          "Couche intermédiaire",
+          "Couche qui combine des motifs en textures ou coins."
+        ],
+        [
+          "Couche profonde",
+          "Couche qui représente des structures plus abstraites."
+        ]
+      ],
+      "question": "Quel type de motif est généralement détecté par les premières couches ?",
+      "options": [
+        "Bords et lignes",
+        "Objets complets et concepts abstraits uniquement",
+        "Décisions finales"
+      ],
+      "correct": 0,
+      "why": "La représentation se construit progressivement. Les premières couches répondent à des motifs locaux simples ; les couches suivantes les combinent pour former des structures plus complexes.",
+      "scene": "Une image se transforme en trois étages de cartes : bords, textures/coins, puis formes composées.",
+      "objects": [
+        "early",
+        "middle",
+        "deep"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Champ récepteur",
+      "concept": "Le champ récepteur d’un neurone profond est la région de l’image originale susceptible d’influencer sa valeur. Empiler des convolutions élargit indirectement cette région et permet de combiner des motifs locaux en motifs globaux.",
+      "formula": "Empilement de convolutions → champ récepteur de plus en plus large",
+      "vocabulary": [
+        [
+          "Champ récepteur",
+          "Zone de l’entrée qui peut influencer un neurone."
+        ],
+        [
+          "Empilement",
+          "Succession de plusieurs couches."
+        ],
+        [
+          "Dépendance indirecte",
+          "Influence transmise à travers les couches précédentes."
+        ],
+        [
+          "Motif global",
+          "Structure composée de plusieurs motifs locaux."
+        ]
+      ],
+      "question": "Pourquoi un neurone profond peut-il représenter une zone plus large de l’image ?",
+      "options": [
+        "Parce que ses couches successives combinent les voisinages précédents",
+        "Parce qu’il regarde toujours un seul pixel",
+        "Parce que le padding supprime les couches"
+      ],
+      "correct": 0,
+      "why": "Chaque couche dépend de neurones précédents qui ont eux-mêmes un champ récepteur. En remontant vers l’image originale, la zone d’influence s’élargit.",
+      "scene": "Un petit carré d’activation remonte les couches et révèle une zone de plus en plus grande sur l’image.",
+      "objects": [
+        "layer1",
+        "layer2",
+        "receptive"
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Architecture typique d’un CNN",
+      "concept": "Une architecture classique alterne convolutions, activations et pooling pour extraire des caractéristiques. Les couches denses finales combinent ces caractéristiques pour produire une décision comme une classification ou une régression.",
+      "formula": "Entrée → Conv → ReLU → Pooling → Conv → ReLU → Pooling → Flatten → Dense → Sortie",
+      "vocabulary": [
+        [
+          "Flatten",
+          "Aplatit le volume de caractéristiques en vecteur."
+        ],
+        [
+          "Dense",
+          "Combine toutes les entrées avec des connexions complètes."
+        ],
+        [
+          "Classification",
+          "Prédiction d’une classe."
+        ],
+        [
+          "Sortie",
+          "Résultat final du réseau."
+        ]
+      ],
+      "question": "Quel est le rôle principal des couches denses finales dans le schéma présenté ?",
+      "options": [
+        "Combiner les caractéristiques pour prendre une décision",
+        "Déplacer le noyau sur l’image",
+        "Ajouter le padding"
+      ],
+      "correct": 0,
+      "why": "Les convolutions extraient les caractéristiques. Après Flatten, les couches denses les combinent pour produire la sortie attendue.",
+      "scene": "Pipeline modulaire en relief ; chaque bloc s’allume au passage du signal jusqu’à la sortie.",
+      "objects": [
+        "conv",
+        "pool",
+        "dense"
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Exemple guidé : ligne verticale",
+      "concept": "Le script construit une image artificielle 8×8 contenant une bande verticale centrale de 1. Un filtre 3×3 dont la colonne centrale vaut 1 est fixé dans Keras pour détecter cette structure.",
+      "formula": "K = [[0,1,0],[0,1,0],[0,1,0]]  •  biais = 0  •  sortie = 6×6",
+      "vocabulary": [
+        [
+          "NumPy array",
+          "Tableau numérique créé à partir de la liste Python."
+        ],
+        [
+          "reshape(1,8,8,1)",
+          "Ajoute batch=1 et canal=1."
+        ],
+        [
+          "Conv2D(1,(3,3))",
+          "Une couche avec un filtre 3×3."
+        ],
+        [
+          "set_weights",
+          "Impose les coefficients du filtre et son biais."
+        ]
+      ],
+      "question": "Pourquoi le script utilise-t-il set_weights(weights) ?",
+      "options": [
+        "Pour imposer le filtre vertical choisi",
+        "Pour augmenter l’image à 32×32",
+        "Pour apprendre automatiquement un second filtre"
+      ],
+      "correct": 0,
+      "why": "Le script veut illustrer un détecteur précis, pas des poids aléatoires. set_weights force Keras à utiliser le noyau vertical et le biais zéro fournis.",
+      "scene": "Une image 8×8 avec bande centrale passe sous le filtre 3×3 ; la carte 6×6 affiche les scores.",
+      "objects": [
+        "image8",
+        "verticalKernel",
+        "activation6"
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Comparaison avec une couche dense",
+      "concept": "Une couche dense appliquée à une image aplatie connecte chaque valeur d’entrée à chaque neurone. Une convolution utilise des filtres locaux partagés et peut donc nécessiter beaucoup moins de paramètres.",
+      "formula": "Dense : 3072 × 100 = 307 200 poids (hors biais)\nConv : 32(3 × 3 × 3 + 1) = 896 paramètres",
+      "vocabulary": [
+        [
+          "Aplatissement",
+          "Transformation de l’image en vecteur."
+        ],
+        [
+          "Connexion dense",
+          "Chaque neurone reçoit toutes les valeurs d’entrée."
+        ],
+        [
+          "Poids partagé",
+          "Même coefficient réutilisé à plusieurs positions."
+        ],
+        [
+          "Économie de paramètres",
+          "Réduction du nombre de paramètres appris."
+        ]
+      ],
+      "question": "Dans l’exemple du document, combien de paramètres utilise la convolution 32 filtres 3×3 sur RGB ?",
+      "options": [
+        "896",
+        "307 200",
+        "32"
+      ],
+      "correct": 0,
+      "why": "Chaque filtre possède 3×3×3 poids et un biais, soit 28 paramètres. Pour 32 filtres : 32×28=896, nettement moins que 3072×100 poids pour la couche dense.",
+      "scene": "Deux architectures en parallèle : grand réseau dense de connexions contre petits noyaux partagés.",
+      "objects": [
+        "denseNet",
+        "convNet",
+        "parameterCounter"
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Pièges et résumé final",
+      "concept": "Les calculs CNN demandent de distinguer taille du filtre, nombre de filtres, canaux, stride et padding. Le nombre de paramètres inclut un biais par filtre et la taille de sortie doit être vérifiée avec les hyperparamètres.",
+      "formula": "O = ⌊(I−F+2P)/S⌋ + 1  •  Paramètres = K(F×F×C+1)",
+      "vocabulary": [
+        [
+          "Canaux",
+          "Chaque filtre couvre toute la profondeur d’entrée."
+        ],
+        [
+          "K vs F",
+          "K est le nombre de filtres ; F est leur taille spatiale."
+        ],
+        [
+          "Biais",
+          "Un biais par filtre."
+        ],
+        [
+          "Valid / Same",
+          "Modes de padding différents."
+        ]
+      ],
+      "question": "Quel élément faut-il ajouter au calcul K(F×F×C) pour compter tous les paramètres ?",
+      "options": [
+        "Le biais de chaque filtre : +K",
+        "Le stride : +S",
+        "La hauteur de sortie : +Hout"
+      ],
+      "correct": 0,
+      "why": "Chaque filtre possède F×F×C poids et un biais supplémentaire. Pour K filtres, le total est K(F×F×C+1). Vérifie aussi les canaux et la compatibilité entière de la taille de sortie.",
+      "scene": "Tableau récapitulatif manipulable : I, F, P, S, C et K alimentent deux compteurs de dimensions et paramètres.",
+      "objects": [
+        "dimensionControls",
+        "parameterControls",
+        "summary"
+      ]
+    }
+  ]
+}
